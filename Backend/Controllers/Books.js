@@ -41,14 +41,17 @@ exports.bestBooks  = (req, res ,next) =>{
 }
 
 exports.modifyBook  = (req, res ,next) =>{
+    /* creation de l'objet bookObjet si il y a une image ajouté (tye file) ou non*/
     const bookObject = req.file ? {
         ...JSON.parse(req.body.book),
+        userId: req.auth.userId,
         imageUrl : `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
     } : {...req.body};
-    
+    /* recherche du livre avec findOne et enregistrement de nouvels données avec updtaeOne */
     delete bookObject.userId;
     Book.findOne({_id : req.params.id})
       .then((book) => {
+        /* si l'utilisateur n'est pas verifié il aura seulment acces à la version sans authentification du livre */
         if(book.userId !== req.auth.userId){
            oneBook()
         }else{
