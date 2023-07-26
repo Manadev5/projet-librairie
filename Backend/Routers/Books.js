@@ -4,11 +4,12 @@ const bookCtrl = require('../Controllers/Books');
 const auth = require('../Middlewares/Auth');
 const multer = require('../Middlewares/Multer')
 
-router.get('/', bookCtrl.allBooks);
-
-router.get('/:id', bookCtrl.oneBook );
 /* Route pour obtenir le trois meillaurs livres selon le averageRating*/
 router.get('/bestrating', bookCtrl.bestBooks);
+
+router.get('/', bookCtrl.allBooks);
+
+router.get('/:id', bookCtrl.oneBook);
 
 router.post('/', auth, multer, bookCtrl.createBook);
 
