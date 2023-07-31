@@ -23,8 +23,8 @@ exports.createBook = (req, res) =>{
     });
     
     book.save()
-      .then(() => {res.status(201).json(console.log('objet créé'))})
-      .catch(error => {res.status(404).json({error})})
+      .then(() => {res.status(201).json({message :'objet créé'})})
+      .catch(error => {res.status(400).json({error})})
    
 };
 
@@ -34,8 +34,6 @@ exports.oneBook = (req, res) =>{
        .catch(error => res.status(404).json({error}))
 
 }
-
-const arrayBooks = []
 
 exports.bestBooks  = (req, res) =>{
     Book.find()
@@ -66,36 +64,41 @@ exports.modifyBook  = (req, res) =>{
 
             Book.updateOne({_id : req.params.id}, {...bookObject, _id : req.params.id})
             .then(() => res.status(201).json({message : 'objet modifié'}))
-            .catch((error) => res.status(401).json({error}))
+            .catch((error) => res.status(400).json({error}))
         
        }
       })
-      .catch(error => res.status(400).json({error}))
+      .catch(error => res.status(404).json({error}))
     
 }
 
  
 
 exports.addRating  = (req, res) => {
-   ratingObject = req.body;
+ratingObject = req.body;
    
-  let Rating = {
+let Rating = {
          userId:  req.auth.userId,
          grade : ratingObject.rating
    }
-   delete Rating._id
-
-   console.log(Rating);
+ console.log(Rating);
     
 Book.findOneAndUpdate({_id: req.params.id},{$push:{ratings:Rating, new: true}})
      .then( book => {
+                
                     const sumRatings = book.ratings.reduce((sum, rating) => sum + rating.grade, 0);
                     book.averageRating = sumRatings / book.ratings.length;
+                    book.averageRating.toFixed(2);
+
+                    res.status(200).json(book);
+                     
                     book.save()
-                    .then(book => res.status(200).json(book))
-                    .catch(error => res.status(401).json({error}))
+                       .then(book => {res.status(201).json(book)})
+                       .catch(error => {res.status(400).json({error})})
+               
+                    
      })
-     .catch(error => res.status(500).json({error}))
+     .catch(error => res.status(404).json({error}))
      
 }
 
@@ -104,19 +107,19 @@ exports.deleteBook  = (req, res) =>{
        .then(book => {
         if(book.userId != req.auth.userId){
 
-            res.status(401).json({error})
+            res.status(403).json({error})
            
         }else{
             const fileName = book.imageUrl.split('/images/')[1];
             fs.unlink(`/images/${fileName}`, () => {
                 Book.deleteOne({_id : req.params.id})
                 .then(() => res.status(200).json({message : 'objet supprimé'}))
-                .catch((error) => res.status(401).json({error}))
+                .catch((error) => res.status(400).json({error}))
                 
          })
            
         }
        } )
-       .catch(error => res.status(400).json({error}))
+       .catch(error => res.status(404).json({error}))
 
 }
