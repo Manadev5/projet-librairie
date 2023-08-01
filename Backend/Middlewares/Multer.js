@@ -9,6 +9,8 @@ const MYME_TYPES = {
 const storage = multer.diskStorage({
     destination:(req, file , callback) => {
         callback(null, 'images')
+       
+            
     },
     filename:(req, file, callback) =>{
         const name = file.originalname.split(' ').join('_');
@@ -17,4 +19,6 @@ const storage = multer.diskStorage({
     }
 });
 
-module.exports = multer({storage : storage}).single('image')
+const limits = { filesize : 500 * 700 };
+
+module.exports = multer({storage : storage, limits}).single('image')
