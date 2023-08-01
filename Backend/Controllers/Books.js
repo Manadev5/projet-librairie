@@ -83,9 +83,13 @@ let Rating = {
    }
  console.log(Rating);
     
-Book.findOneAndUpdate({_id: req.params.id},{$push:{ratings:Rating, new: true}})
+Book.findOne({_id: req.params.id})
      .then( book => {
-                
+                  UserRated = book.ratings.find((u) => u.userId === req.auth.userId)
+                  if(UserRated){
+                    res.status(400).json({message :'vous avez déjà noté'})
+                  }else{
+                    book.ratings.push(Rating);
                     const sumRatings = book.ratings.reduce((sum, rating) => sum + rating.grade, 0);
                     book.averageRating = sumRatings / book.ratings.length;
                     book.averageRating.toFixed(2);
@@ -93,9 +97,9 @@ Book.findOneAndUpdate({_id: req.params.id},{$push:{ratings:Rating, new: true}})
                     res.status(200).json(book);
                      
                     book.save()
-                       .then(book => {res.status(201).json(book)})
-                       .catch(error => {res.status(400).json({error})})
-               
+                       .then(book => res.status(200).json(book))
+                       .catch(error => res.status(401).json({error}))
+                  }
                     
      })
      .catch(error => res.status(404).json({error}))
