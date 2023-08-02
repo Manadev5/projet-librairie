@@ -3,6 +3,7 @@ const User = require('../Models/User');
 const jwt = require('jsonwebtoken');
 
 exports.signUp = (req, res, next) =>{
+    //hashage du mot de pass à trevers bcrypt
     bcrypt.hash(req.body.password, 10)
      .then(hash =>{
         const user = new User({
@@ -29,6 +30,7 @@ exports.login = (req, res, next) => {
                 if(!valid){
                     return res.status(404).json({message :'mot de passe où email incorrect'})
                 }
+                //sauvegarde du token et de son uderId
                 res.status(200).json({
                     userId : User._id,
                     token : jwt.sign(

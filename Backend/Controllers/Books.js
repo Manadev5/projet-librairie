@@ -38,7 +38,9 @@ exports.oneBook = (req, res) =>{
 exports.bestBooks  = (req, res) =>{
     Book.find()
     .then( books => {
+        //liste de livres en partent dans la note moyenne plus élevé jusqu'à la note moins élevé
         books.sort((a, b) => b.averageRating - a.averageRating);
+        //Récuperation de 3 prémiers
         const bestRatedBooks = books.slice(0, 3);
         
         res.status(200).json(bestRatedBooks)})
@@ -47,12 +49,12 @@ exports.bestBooks  = (req, res) =>{
 }
 
 exports.modifyBook  = (req, res) =>{
-    /* creation de l'objet bookObjet si il y a une image ajouté (type file) ou non*/
+    /* creation de l'objet bookObjet au cas où une image vien d'etre ajouté (type file) ou non*/
     const bookObject = req.file ? {
         ...JSON.parse(req.body.book),
         imageUrl : `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
     } : {...req.body};
-    // recherche du livre avec findOne et enregistrement de nouvels données avec updtaeOne 
+    // recherche du livre avec findOne et enregistrement de nouvelles données avec updtaeOne 
     delete bookObject._userId;
    Book.findOne({_id : req.params.id})
       .then((book) => {
@@ -89,12 +91,10 @@ Book.findOne({_id: req.params.id})
                   if(UserRated){
                     res.status(400).json({message :'vous avez déjà noté'})
                   }else{
+                    // Calcul de la note moyenne avec approximation à une chiffre après la virgulle
                     book.ratings.push(Rating);
                     const sumRatings = book.ratings.reduce((sum, rating) => sum + rating.grade, 0);
-                    book.averageRating = sumRatings / book.ratings.length;
-                    book.averageRating.toFixed(2);
-
-                    res.status(200).json(book);
+                    book.averageRating = (sumRatings / book.ratings.length).toFixed(1);
                      
                     book.save()
                        .then(book => res.status(200).json(book))
@@ -114,7 +114,9 @@ exports.deleteBook  = (req, res) =>{
             res.status(403).json({error})
            
         }else{
+            //Récuperation du nom du file appartenant à l'image
             const fileName = book.imageUrl.split('/images/')[1];
+            //Suppresion du livre et de l'image associé
             fs.unlink(`/images/${fileName}`, () => {
                 Book.deleteOne({_id : req.params.id})
                 .then(() => res.status(200).json({message : 'objet supprimé'}))
